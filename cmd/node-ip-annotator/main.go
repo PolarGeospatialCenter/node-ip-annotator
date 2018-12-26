@@ -65,7 +65,8 @@ func main() {
 
 	intAddr, err := getInterfaceAddress(iface)
 	if err != nil {
-		errorAndExit(err)
+		log.Error(err, "")
+		os.Exit(1)
 	}
 
 	node, err := clientset.CoreV1().Nodes().Get(nodeName, metav1.GetOptions{})
@@ -81,11 +82,6 @@ func main() {
 
 }
 
-func errorAndExit(err error) {
-	log.Error(err, "")
-	os.Exit(1)
-}
-
 func getInterfaceAddress(name string) (string, error) {
 	int, err := net.InterfaceByName(name)
 	if err != nil {
@@ -95,6 +91,10 @@ func getInterfaceAddress(name string) (string, error) {
 	addresses, err := int.Addrs()
 	if err != nil {
 		return "", err
+	}
+
+	if len(addresses) == 0 {
+		return "", fmt.Errorf("interface %s has no addresses", name)
 	}
 
 	if ipnet := addresses[0].(*net.IPNet).IP.String(); ipnet != "" {
